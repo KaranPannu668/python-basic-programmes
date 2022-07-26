@@ -1,6 +1,8 @@
 from ast import Import
+from distutils import extension
 from io import BufferedRandom
 from math import copysign
+from pkgutil import extend_path
 import random
 from turtle import back
 
@@ -10,6 +12,47 @@ except ImportError: # python 2
     import Tkinter as tkinter
 
 mainWindow = tkinter.Tk()
+
+def load_images(card_images):
+    suits = ['heart', 'club', 'diamond', 'spade']
+    face_cards = ['jack', 'queen', 'king']
+
+    if tkinter.TkVersion >= 8.6:
+        extension = 'png'
+    else:
+        extension = 'ppm'
+
+    # for each suit, retrieve the image for the cards
+    for suit in suits:
+        # first the number cards 1 to 10
+        for card in range(1,11):
+            name = f'utils/cards/{str(card)}_{suit}.{extension}'
+            image = tkinter.PhotoImage(file=name)
+            card_images.append((card,image))
+
+        # next the face cards
+        for card in face_cards:
+            name = f'utils/cards/{str(card)}_{suit}.{extension}'
+            image = tkinter.PhotoImage(file=name)
+            card_images.append((10, image))
+
+
+def deal_card(frame):
+    # pop the next card off the top of the deck
+    next_card = deck.pop()
+    # add the image to a label and display the label
+    tkinter.Label(frame, image=next_card[1], relief='raised').pack(side='left')
+    # now return the card's face value
+    return next_card
+
+
+def deal_dealer():
+    deal_card(dealer_card_frame)
+
+
+def deal_player():
+    deal_card(player_card_frame)
+
 
 # Set up the screen and frames for the dealer and player
 mainWindow.title('Black Jack')
@@ -35,14 +78,27 @@ tkinter.Label(card_frame, text='Player', background='green', fg='white').grid(ro
 tkinter.Label(card_frame, textvariable=player_score_label, background='green', fg='white').grid(row=3, column=0)
 
 # Embedded frame to hold the card images
-player_card_frame = tkinter.Frame(card_frame, background='greene')
+player_card_frame = tkinter.Frame(card_frame, background='green')
 player_card_frame.grid(row=2, column=1, sticky='ew', rowspan=2)
 
 button_frame = tkinter.Frame(mainWindow)
 button_frame.grid(row=3, column=0, columnspan=3, sticky='w')
 
-dealer_button = tkinter.Button(button_frame, text='Dealer')
+dealer_button = tkinter.Button(button_frame, text='Dealer', command=deal_dealer)
 dealer_button.grid(row=0, column=0)
 
-player_button = tkinter.Button(button_frame, text='Player')
+player_button = tkinter.Button(button_frame, text='Player', command=deal_player)
 player_button.grid(row=0, column=1)
+
+# load cards
+cards = []
+load_images(cards)
+# Create a new deck cards and shuffle them
+deck = list(cards)
+random.shuffle(cards)
+
+# Create the list to store the dealer's and player's hands
+dealer_hand = []
+player_hand = []
+
+mainWindow.mainloop()

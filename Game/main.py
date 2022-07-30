@@ -1,14 +1,28 @@
-from player import Player
+from enemy import Enemy, Troll, Vampyre, VampyreKing
 
-tim = Player('Tim')
+dracula = VampyreKing('Dracula')
+print(dracula)
 
-print(tim.name)
-print(tim.lives)
-tim.lives -= 1
-print(tim)
+dracula.take_damage(12)
+print(dracula)
 
-tim.lives -= 1
-print(tim)
+# ugly_troll = Troll('Pug')
+# print("Ugly troll - {}".format(ugly_troll))
 
-tim.lives -= 1
-print(tim)
+# another_troll = Troll('Ug')
+# print("Another troll - {}".format(another_troll))
+
+# brother = Enemy('Urg')
+# print(brother)
+
+# ugly_troll.grunt()
+
+# vamp = Vampyre('Vlad')
+# print(vamp)
+# vamp.take_damage(3)
+# ugly_troll.take_damage(3)
+# print(vamp)
+
+# while vamp._alive:
+#     vamp.take_damage(1)
+    # print(vamp)

@@ -1,12 +1,29 @@
+from email.utils import localtime
 import sqlite3
+import pytz
+import datetime
+import pickle
 
 db = sqlite3.connect("accounts.sqlite")
 db.execute("CREATE TABLE IF NOT EXISTS accounts (name TEXT PRIMARY KEY NOT NULL, balance INTEGER NOT NULL)")
-db.execute('CREATE TABLE IF NOT EXISTS transactions(time TIMESTAMP NOT NULL, account TEXT NOT NULL, amount INTEGER NOT NULL,'
-            ' PRIMARY KEY (time, account))')
+db.execute('CREATE TABLE IF NOT EXISTS history(time TIMESTAMP NOT NULL, account TEXT NOT NULL, amount INTEGER NOT NULL,'
+            ' zone INTEGER NOT NULL, PRIMARY KEY (time, account))')
+db.execute("CREATE VIEW IF NOT EXISTS localhistory AS strftime('%Y-%m-%d %H:%M:%f', history.time, 'localtime') AS localtime,"
+                        " history.account, history.amount FROM history ORDER BY history.time")
 
 
 class Account(object):
+
+    @staticmethod
+    def _current_time():
+        # return pytz.utc.localize(datetime.datetime.utcnow())
+        # local_time = pytz.utc.localize(datetime.datetime.utcnow())
+        # return local_time.astimezone()
+
+        utc_time = pytz.utc.localize(datetime.datetime.utcnow())
+        local_time = utc_time.astimezone()
+        zone = localtime.tzinfo()
+        return utc_time, zone
 
     def __init__(self, name: str, opening_balance: int = 0):
         cursor = db.execute("SELECT name, balance FROM accounts WHERE (name=?)", (name,))
@@ -25,13 +42,25 @@ class Account(object):
     
     def deposit(self, amount: int) -> float:
         if amount > 0.0:
-            self._balance += amount
+            # new_balance = self._balance + amount
+            # deposit_time = Account._current_time()
+            # db.execute("UPDATE accounts SET balance = ? WHERE (name=?)", (new_balance, self.name))
+            # db.execute("INSERT INTO history VALUES(?,?,?)", (deposit_time, self.name, amount))
+            # db.commit()
+            # self._balance = new_balance
+            self._save_update(amount)
             print("{:.2f} deposited".format(amount / 100))
         return self._balance / 100
     
     def withdraw(self, amount: int) -> float:
         if 0 < amount <= self._balance:
-            self._balance -= amount
+            # new_balance = self._balance - amount
+            # withdrawl_time = Account._current_time()
+            # db.execute("UPDATE accounts SET balance = ? WHERE (name = ?)", (new_balance, self.name))
+            # db.execute("INSERT INTO history VALUES(?, ?, ?)", (withdrawl_time, self.name, -amount))
+            # db.commit()
+            # self._balance = new_balance
+            self._save_update(-amount)
             print("{:.2f} withdrawin".format(amount / 100))
             return amount / 100
         else:
@@ -40,6 +69,15 @@ class Account(object):
     
     def show_balance(self):
         print("Balance on account {} is {:.2f}".format(self.name, self._balance / 100))
+    
+    def _save_update(self, amount):
+        new_balance = self._balance + amount
+        deposit_time, zone = Account._current_time() # Unpacking the return tuple
+        pickled_zone = pickle.dumps(zone)
+        db.execute("UPDATE accounts SET balance = ? WHERE (name=?)", (new_balance, self.name))
+        db.execute("INSERT INTO history VALUES(?,?,?,?)", (deposit_time, self.name, amount, pickled_zone))
+        db.commit()
+        self._balance = new_balance
 
 
 if __name__ == '__main__':

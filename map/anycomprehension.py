@@ -11,3 +11,13 @@ if any([plant.plant_type == "Grass" for plant in plants_list]):
     print("This pack contains grass")
 else:
     print("No grasses in this pack")
+
+if any(plant.plant_type == "Grass" for plant in plants_dict.values()):
+    print("This dict contains grasses")
+else:
+    print("No grasses in the dict")
+
+if any(plants_dict[key].plant_type == "Cactus" for key in plants_dict):
+    print("This dict contains cactii")
+else:
+    print("No cactii in the dict")
